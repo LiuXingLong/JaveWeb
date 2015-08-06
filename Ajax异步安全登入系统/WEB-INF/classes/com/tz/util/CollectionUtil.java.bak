@@ -1,0 +1,113 @@
+package com.tz.util;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import com.mysql.jdbc.PreparedStatement;
+import com.mysql.jdbc.ResultSet;
+import com.tz.vo.Student;
+/**
+ * 
+ * @author Administrator
+ * 作者  hnust_LiuXingLong
+ * 作用：数据库链接类
+ */
+
+public class CollectionUtil {
+	public static Connection getConnection(){
+		Connection conn=null;
+		try{
+			Class.forName("com.mysql.jdbc.Driver"); // 加载数据库驱动类
+			conn=DriverManager.getConnection("jdbc:mysql://localhost:3306/text", "root", "112526");
+		}catch(Exception e){		
+			e.printStackTrace();
+		}	
+		return conn;	
+	}
+	/*
+	public static void main(String [] args){	
+		System.out.println(getConnection());
+	}*/
+	
+	/* 查找数据 */
+	public static Student findStudent(String username,String password){
+		Connection conn=getConnection(); //得到链接
+		java.sql.PreparedStatement ps=null;
+		ResultSet rs=null;
+		Student student=null;
+		
+		try {
+			ps=conn.prepareStatement("select * from student where username=? and password=?");
+			ps.setString(1, username);
+			ps.setString(2, password);
+			rs= (ResultSet) ps.executeQuery();// 查询数据
+			if(rs.next()){ //如果查到数据
+				student=new Student();
+				student.setUsername(rs.getString("username"));
+				student.setPassword(rs.getString("password"));				
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+			try {
+				rs.close();
+				ps.close();
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+		}	
+		return student;		
+	}
+		
+	/* 插入数据  */
+	
+	public static Student insertStudent(String username,String password){		
+		Connection conn=getConnection(); //得到链接
+		Statement stmt=null;
+		java.sql.PreparedStatement ps=null;
+		ResultSet rs=null;
+		Student student=null;	
+		try {
+			ps=conn.prepareStatement("select * from student where username=? ");
+			ps.setString(1, username);		
+			rs= (ResultSet) ps.executeQuery();// 查询数据
+			if(rs.next()){ //如果查到数据
+				student=new Student();
+				student.setUsername(rs.getString("username"));			
+			}	
+			if(null==student){
+				// 数据库中不存在该用户    注册用户名和密码
+			String sql="insert into student (username,password)values("+username+","+password+")";
+			stmt=conn.createStatement();
+			stmt.execute(sql);		
+			}	
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+			try {
+				rs.close();
+				ps.close();
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+		}		
+		return findStudent(username,password);		
+	}
+}
+
+
+
+
+
+
+
+
+
+
